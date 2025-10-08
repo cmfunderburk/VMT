@@ -1,0 +1,73 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "econsim-vmt"
+version = "0.1.0-dev0"
+description = "VMT EconSim Platform - Educational economic simulation with spatial visualization"
+authors = [ { name = "Chris Funderburk" } ]
+readme = "README.md"
+license = { text = "Apache-2.0" }
+requires-python = ">=3.11"
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: Apache Software License",
+  "Operating System :: OS Independent",
+  "Intended Audience :: Education",
+  "Topic :: Education",
+  "Framework :: PyQt",
+]
+dependencies = [
+  "PyQt6>=6.5.0",
+  "pygame>=2.5.0",
+  "numpy>=1.24.0",
+  "msgpack>=1.0.0"
+]
+
+[project.scripts]
+vmt-launcher = "econsim.gui.launcher.__main__:main"
+vmt-delta = "econsim.simulation.logging.delta.__main__:main"
+vmt-main = "econsim.main:main"
+# Backward compatibility aliases
+econsim-launcher = "econsim.gui.launcher.__main__:main"
+econsim-delta = "econsim.simulation.logging.delta.__main__:main"
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=7.4.0",
+  "black>=24.0.0",
+  "ruff>=0.5.0",
+  "mypy>=1.8.0",
+  "mdformat>=0.7.17",
+  "mdformat-gfm>=0.3.5",
+  "mdformat-tables>=0.4.1",
+]
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+ignore = ["E501", "SIM105"]  # Allow try-except-pass for now
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+strict = false
+namespace_packages = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.pytest.ini_options]
+# Exclude GUI manual tests from pytest collection
+testpaths = ["tests"]
+norecursedirs = ["MANUAL_TESTS"]

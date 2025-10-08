@@ -1,0 +1,103 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.env
+.env*/
+venv/
+.venv/
+
+# Packaging
+build/
+dist/
+*.egg-info/
+
+# Caches
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Visual / media artifacts
+tests/visual_regression/results/
+tests/visual_regression/temp/
+*.png
+*.gif
+*.mp4
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Temporary
+.tmp/
+
+# Virtual environments (project-specific)
+vmt-dev/
+
+# Additional standard Python ignores
+
+# Virtual environment variants
+.python-version
+pip-wheel-metadata/
+wheels/
+__pypackages__/
+
+# Packaging / build extras
+.eggs/
+*.egg
+MANIFEST
+
+# Coverage & testing artifacts
+.coverage.*
+coverage.xml
+.pytest_cache/  # (already listed above; duplicated intentionally for grouping clarity)
+.hypothesis/
+.nox/
+.tox/
+
+# Static analysis / type checkers
+.pyre/
+.pytype/
+
+# Editor / IDE settings
+.vscode/
+.idea/
+*.code-workspace
+
+# Notebook checkpoints
+.ipynb_checkpoints/
+
+# Generic caches
+.cache/
+
+# Profiling data
+*.prof
+*.pstat
+profile*
+
+# Debug logs and structured logs
+gui_logs/*.log
+gui_logs/*.json
+gui_logs/*.jsonl
+gui_logs/structured/
+gui_logs/compact/
+# Allow documentation in gui_logs directory
+!gui_logs/README.md
+!gui_logs/.gitignore
+
+
+# Economic analysis logs (ignore bulk logs but keep documentation)
+# Use pattern to ignore contents, not the directory itself, so README may be whitelisted
+economic_analysis_logs/*
+!economic_analysis_logs/README.md
+
+# Simulation delta recording files
+sim_runs/
+
+*.backup

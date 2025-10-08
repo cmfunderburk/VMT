@@ -1,0 +1,8 @@
+# mdformat configuration for VMT EconSim
+# Ensures consistent markdown formatting across documentation
+
+# Wrap lines at 100 characters (matching black/ruff)
+wrap = 100
+
+# Number ordered lists
+number = true

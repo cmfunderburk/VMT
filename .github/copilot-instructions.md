@@ -1,0 +1,384 @@
+# VMT EconSim AI Coding Agent Instructions
+
+Deterministic educational microeconomics simulation (spatial NxN grid, utility-maximizing agents, bilateral trade, PyQt6 visualization). Core focus: economic theory correctness, visual clarity, and deterministic reproducibility.
+
+## ⚠️ DEVELOPMENT PAUSE - Economic Model Validation (October 2025)
+
+**ALL CODING IS ON PAUSE** while shoring up the economic modeling framework.
+
+**Current Focus**: Validating economic theory implementation against spatial simulation reality. Multiple expert reviews (Claude Opus, Gemini, GPT-5, Claude Sonnet) have identified critical gaps between classical microeconomic theory and our spatial, discrete-time implementation.
+
+**What's Being Done**:
+- Documenting explicit mathematical models bridging classical theory → spatial implementation
+- Validating utility functions against analytical predictions in spatial context
+- Establishing formal economic correctness criteria for discrete grid simulations
+- Creating validation test suite for each utility type
+
+**Key Documents**:
+- `tmp_plans/FINAL/Opus_econ_model_review.md` - Validation guide for current implementation
+- `tmp_plans/FINAL/Spatial_Economic_Theory_Framework.md` - Normative theoretical foundation
+- `tmp_plans/REVIEWS/` - Expert reviews (Claude Opus, Gemini, GPT-5, Sonnet)
+
+**When to Resume Coding**: After economic framework validation complete and formal models documented.
+
+**If Asked to Code**: Politely decline and direct to economic model validation work. Exception: Critical bug fixes only.
+
+## Project Philosophy
+
+**Educational Mission**: Teach microeconomic theory through spatial visualization where agent movements reflect utility-maximizing behavior. Students should predict agent behavior from utility functions alone.
+
+**Economic Correctness First**: All agent decisions must implement sound economic theory (utility maximization, Pareto improvements, deterministic tiebreaks). Visual behavior derives from correct economic logic, not ad-hoc movement rules.
+
+## Architecture Overview
+
+### Core Runtime Flow
+```
+SimulationCoordinator (Infrastructure: config, agent index)
+    ↓
+UnifiedStepExecutor (Runtime: canonical state, step logic)
+    ↓
+make_agent_decision() → evaluate utility + distance costs
+    ↓
+Two-Phase Execution:
+  Phase 1: Collect all decisions (deterministic - same world state)
+  Phase 2: Execute special actions (coordinated state changes)
+```
+
+### Directory Structure (`src/econsim/`)
+- **Coordinator**: `simulation/coordinator.py` - `SimulationCoordinator` (infrastructure, config, agent index)
+- **Executor**: `simulation/executor.py` - `UnifiedStepExecutor` (canonical runtime state, two-phase execution)
+- **Decision Engine**: `simulation/agent/unified_decision.py` - `make_agent_decision()`
+- **Agents**: `simulation/agent/core.py` - `Agent` class with dual inventory
+- **Utility Functions**: `simulation/agent/utility_functions.py` - Factory pattern
+- **Spatial Indexing**: `simulation/world/spatial.py` - `AgentSpatialGrid` O(n) proximity queries
+- **Configuration**: `simulation/features.py` - `SimulationFeatures` centralized flags
+- **GUI**: `gui/launcher/` - 7 educational scenarios, `gui/embedded/` - live visualization
+
+## Critical Patterns & Conventions
+
+### 1. Factory-Only Imports (MANDATORY)
+```python
+# ✅ ALWAYS use factory function
+from econsim.simulation.agent.utility_functions import create_utility_function
+utility_func = create_utility_function("cobb_douglas", alpha=0.5)
+
+# ❌ NEVER import concrete classes directly
+from econsim.simulation.agent.utility_functions import CobbDouglasUtility  # FORBIDDEN
+```
+
+**Why**: Extensibility for future utility functions without breaking existing code.
+
+### 2. Two-Phase Execution Model
+**Phase 1 (Decision Collection)**: All agents make decisions seeing identical world state. Direct agent methods OK (`deposit_to_home()`, `withdraw_from_home()`).
+
+**Phase 2 (Action Execution)**: Coordinated multi-entity operations via `special_action`:
+- `"collect"` - Resource collection (executor validates)
+- `"trade"` - Atomic bilateral swap (executor coordinates)
+- `"pair"` - Bidirectional partnership creation (conflict resolution by lowest ID)
+- `"unpair"` - Partnership dissolution (executor breaks links)
+
+**Rule**: Single-entity ops = agent methods. Multi-entity ops = special actions.
+
+### 3. State Ownership Pattern (Coordinator-Executor V2)
+**Executor owns runtime state**: `UnifiedStepExecutor` owns the canonical agent list and respawn scheduler during simulation execution.
+
+**Coordinator provides infrastructure**: `SimulationCoordinator` handles configuration, initialization, and provides read-only access to executor's state via property proxies.
+
+**Key principles**:
+- `executor.agents` is the canonical agent list (executor owns runtime state)
+- `coordinator.agents` is a read-only proxy to `executor.agents` (after first step)
+- `coordinator._initial_agents` stores initial configuration (before executor creation)
+- `coordinator.rebuild_agent_index()` public API for future agent lifecycle sync
+- `executor.respawn_scheduler` owned by executor (initialized in `__init__`)
+- `coordinator.respawn_scheduler` is a read-only proxy to executor's scheduler
+
+```python
+# ✅ Access agents through coordinator (proxies to executor)
+for agent in coordinator.agents:
+    process(agent)
+
+# ✅ Executor modifies its own canonical state
+executor.agents.append(new_agent)
+coordinator.rebuild_agent_index()  # Sync index (future agent lifecycle)
+
+# ❌ Don't bypass the architecture
+coordinator._initial_agents.append(new_agent)  # WRONG - executor owns runtime state
+```
+
+### 4. Dual Inventory System
+- **Total bundle**: `carrying_inventory + home_inventory` (used for utility calculations)
+- **Trade execution**: Only from `carrying_inventory` (prevents home-locked goods)
+- **Capacity**: 100,000 units (effectively unlimited, constraint point for future)
+
+```python
+# ✅ Utility always uses total bundle
+total = agent.get_total_bundle()
+utility = agent.utility_function.calculate(total)
+
+# ✅ Trade evaluation checks carrying inventory
+if agent.carrying_inventory["good1"] >= 1:
+    # Can execute trade
+```
+
+### 5. Determinism Requirements (NON-NEGOTIABLE)
+- **Fixed seed propagation**: All RNG calls must use simulation-controlled seed
+- **Tiebreaks**: When multiple candidates have equal utility gain, choose lowest `agent.id`
+- **Ordering**: Sort candidates before evaluation, use deterministic structures (list, not set)
+- **Trade execution**: Lower ID agent executes trade (prevents duplicate execution)
+
+**Example tiebreak**:
+```python
+# ✅ Deterministic partner selection
+if len(ties) > 1:
+    best_partner = min(ties, key=lambda c: c.agent_id)
+```
+
+### 6. Configuration Management
+```python
+# ✅ Use SimulationFeatures centralized config
+features = SimulationFeatures.from_environment()
+if features.trade_draft_enabled:
+    # Enable trade enumeration
+
+# ❌ Never access os.environ directly in simulation code
+if os.environ.get("ECONSIM_TRADE_DRAFT") == "1":  # WRONG
+```
+
+### 7. Spatial Indexing (Performance Critical)
+```python
+# ✅ O(n) proximity queries via AgentSpatialGrid
+spatial_grid = AgentSpatialGrid(width, height)
+for agent in agents:
+    spatial_grid.add_agent(agent.x, agent.y, agent)
+
+nearby = spatial_grid.get_agents_in_radius(x, y, perception_radius)
+
+# ❌ NEVER iterate all agents for proximity (O(n²))
+nearby = [a for a in all_agents if distance(a.x, a.y, x, y) <= radius]  # WRONG
+```
+
+## Essential Development Commands
+
+```bash
+# Setup (canonical virtual environment)
+make venv && source vmt-dev/bin/activate
+
+# Fast Visual Validation (High Density Local scenario at 20 FPS)
+make visualtest
+
+# Full Test Suite (210+ tests covering V2 architecture)
+make test-unit
+
+# Performance Regression Guard (7 scenarios, determinism checks)
+make perf
+
+# Interactive Scenario Browser (7 educational scenarios)
+make launcher
+
+# Baseline Capture (before refactoring)
+make baseline-capture
+
+# Code Quality Tools
+make lint        # Check code style (ruff + black + mdformat)
+make format      # Auto-format code and markdown
+make type        # Run mypy type checking
+```
+
+**Test Coverage**: `tests/unit/test_agent.py` (inventory management), `tests/unit/test_unified_decision_logic.py` (decision logic), `tests/integration/test_unified_decision_integration_v2.py` (end-to-end), `tests/integration/test_determinism_trades.py` (reproducibility).
+
+### Environment Variables for Debugging
+
+```bash
+# Simulation Feature Flags (use SimulationFeatures.from_environment())
+ECONSIM_FORAGE_ENABLED=0       # Disable resource collection (default: 1)
+ECONSIM_TRADE_DRAFT=1          # Enable trade enumeration (default: 0)
+ECONSIM_TRADE_EXEC=1           # Enable trade execution (default: 0)
+
+# Debug & Visualization
+ECONSIM_DEBUG_PRINT=1          # Enable debug print statements
+ECONSIM_DEBUG_TARGET_ARROWS=1  # Show target arrows in visualization
+ECONSIM_HEADLESS_RENDER=1      # Headless rendering for tests
+
+# Launcher & GUI
+ECONSIM_LAUNCHER_SUPPRESS_LOGS=1  # Suppress launcher file logging (default in make launcher)
+ECONSIM_DEV_APPDATA=/path/to/dir  # Override config/data directory for development
+```
+
+**Critical**: Never access `os.environ` directly in simulation code - always use `SimulationFeatures.from_environment()` for feature flags.
+
+## Economic Trade Implementation
+
+### Trade Structure
+- **1-for-1 only**: All trades exchange 1 unit of good A for 1 unit of good B
+- **Pareto improvements**: Both agents must gain utility (MIN_TRADE_UTILITY_GAIN = 0.001)
+- **Total bundle evaluation**: Utility calculated on `carrying + home`, but execution from `carrying` only
+
+**Key Functions**:
+```python
+# Find beneficial trade between two agents
+find_beneficial_bilateral_trade(agent, partner) -> Optional[BilateralTrade]
+
+# Select best trading partner (deterministic tiebreaks)
+find_best_trading_partner(agent, nearby_agents) -> Optional[AgentInfo]
+```
+
+**Conflict Resolution**: If multiple agents target same partner, lowest ID wins. Existing partnerships respected (no partner stealing).
+
+**Files**: `src/econsim/simulation/agent/unified_decision.py:279` (trade evaluation), `src/econsim/simulation/executor.py:219` (trade execution).
+
+## Recording & Debug System Status
+
+**REMOVED**: Delta recorder completely removed (October 2025).
+
+**Current**: Use print statements (`ECONSIM_DEBUG_PRINT=1`) or Python debugger for debugging.
+
+**Future**: DebugRecorder system ready for implementation (see `tmp_plans/CRITICAL/DEBUG_RECORDING_V2_IMPLEMENTATION_PLAN.md`).
+- **Architecture**: Snapshots + Decision logs in SQLite
+- **Timeline**: 3-4 weeks implementation
+- **Status**: Design approved, ready to build
+
+## Refactor Status
+
+**⚠️ ON HOLD**: All refactoring paused for economic model validation (see Development Pause above).
+
+**Current Phase**: Phase 3 complete (V2 unified decision engine implemented + tested).
+
+**Next Phase**: Phase 4 pending (legacy removal + V2 → canonical rename) - will resume after economic validation.
+
+### What's Working
+- ✅ Unified decision engine (`make_agent_decision` single entrypoint)
+- ✅ Two-phase execution model (`UnifiedStepExecutor`)
+- ✅ Agent dual inventory with economic correctness
+- ✅ Factory-based utility functions (3 types)
+- ✅ Deterministic simulation (seed-based reproducibility)
+- ✅ 210+ test suite with performance baselines
+
+### DO NOT
+- ❌ Extend legacy decision/preference components (being removed)
+- ❌ Import legacy recorder classes (removed October 2025)
+- ❌ Introduce O(n²) agent selection patterns (use `AgentSpatialGrid`)
+- ❌ Add backward compatibility shims (favor clean deletion)
+
+## Project-Specific Anti-Patterns
+
+**Performance**:
+- Never nest all-agent loops (O(n²) death spiral)
+- Always use `AgentSpatialGrid.get_agents_in_radius()` for proximity
+- Maintain O(n) per-agent complexity budget
+
+**Economic Logic**:
+- Keep utility calculations explicit and traceable
+- Distance discounting must preserve economic interpretation
+- Total bundle (carrying + home) for utility, carrying only for execution
+
+**Code Quality**:
+- Ask before removing code with unclear dependencies
+- Resolve import errors immediately (no "maybe needed later")
+- No deprecation warnings or try/except compatibility layers
+- Keep economic reasoning readable (avoid over-abstraction)
+
+## Key Economic Behaviors to Preserve
+
+**Cobb-Douglas agents** (`alpha=0.5, beta=0.5`): Balance both goods, trade readily when imbalanced.
+
+**Perfect Substitutes agents**: Focus on cheaper/closer good, ignore other good entirely.
+
+**Perfect Complements (Leontief) agents**: Collect fixed proportions, reject unbalanced trades.
+
+**Visual validation**: `make visualtest` launches High Density Local scenario - observe agents with different utility functions exhibit measurably different spatial patterns.
+
+## Critical File References
+
+- **Decision entrypoint**: `src/econsim/simulation/agent/unified_decision.py:make_agent_decision` (line 1130)
+- **Agent class**: `src/econsim/simulation/agent/core.py:Agent` (line 27)
+- **Utility factory**: `src/econsim/simulation/agent/utility_functions.py:create_utility_function`
+- **Two-phase executor**: `src/econsim/simulation/executor.py:UnifiedStepExecutor` (line 34)
+- **Spatial indexing**: `src/econsim/simulation/world/spatial.py:AgentSpatialGrid` (line 21)
+- **Feature flags**: `src/econsim/simulation/features.py:SimulationFeatures` (line 31)
+- **Visual test**: `visual_test_simple.py` (launches High Density Local)
+- **Big picture plan**: `initial_planning.md` (educational mission, risk radar)
+
+## When Making Changes
+
+1. **Economic correctness**: Verify utility maximization, Pareto efficiency, deterministic tiebreaks
+2. **Visual validation**: Run `make visualtest` - agent movements should reflect utility functions
+3. **Test coverage**: Run `make test-unit` (210+ tests must pass)
+4. **Performance check**: Run `make perf` (no regression vs baseline)
+5. **Determinism**: Same seed = identical results (verify with `tests/integration/test_determinism_trades.py`)
+
+## Planning & Documentation
+
+- **Strategic plans**: `tmp_plans/CRITICAL/` (architecture decisions, recorder design)
+- **Reviews**: `tmp_plans/REVIEWS/` (economic implementation audits)
+- **Big picture**: `initial_planning.md` (educational mission, success metrics)
+- **Project status**: README.md (current phase, next steps)
+
+## Git Workflow & Branch Strategy
+
+**Current Branch**: `sim_recording` (active development, working on Phase 3-4 refactor)
+**Default Branch**: `main` (stable releases)
+
+**Development Pattern**:
+- Feature branches for major work (e.g., `sim_recording` for recording system)
+- Comprehensive testing before merge (`make test-unit && make perf`)
+- Baseline capture for refactors (`make baseline-capture`)
+- All tests must pass before pushing to shared branches
+
+**Project Setup**:
+- Python 3.11+ required (`pyproject.toml` specifies `>=3.11`)
+- Virtual environment at `vmt-dev/` (created by `make venv`)
+- Editable install with dev dependencies: `pip install -e .[dev]`
+
+## Common Pitfalls & Solutions
+
+**Pitfall 1**: Importing utility functions incorrectly
+```python
+# ❌ WRONG - bypasses factory pattern
+from econsim.simulation.agent.utility_functions import CobbDouglasUtility
+
+# ✅ CORRECT - always use factory
+from econsim.simulation.agent.utility_functions import create_utility_function
+utility = create_utility_function("cobb_douglas", alpha=0.5)
+```
+
+**Pitfall 2**: Breaking determinism with unordered structures
+```python
+# ❌ WRONG - set iteration order is non-deterministic
+candidates = {agent1, agent2, agent3}
+for agent in candidates:  # Random order!
+
+# ✅ CORRECT - sort by agent.id for deterministic tiebreaks
+candidates = [agent1, agent2, agent3]
+candidates.sort(key=lambda a: a.id)
+for agent in candidates:  # Deterministic order
+```
+
+**Pitfall 3**: O(n²) proximity queries
+```python
+# ❌ WRONG - nested agent loops
+nearby = [a for a in all_agents if distance(a.x, a.y, x, y) <= radius]
+
+# ✅ CORRECT - use spatial grid
+spatial_grid = AgentSpatialGrid(width, height)
+nearby = spatial_grid.get_agents_in_radius(x, y, radius)
+```
+
+**Pitfall 4**: Forgetting dual inventory distinction
+```python
+# ❌ WRONG - utility calculation ignores home inventory
+utility = agent.utility_function.calculate(agent.carrying_inventory)
+
+# ✅ CORRECT - utility always uses total bundle
+total_bundle = agent.get_total_bundle()  # carrying + home
+utility = agent.utility_function.calculate(total_bundle)
+```
+
+**Pitfall 5**: Feature flags accessed incorrectly
+```python
+# ❌ WRONG - direct environment access
+if os.environ.get("ECONSIM_TRADE_DRAFT") == "1":
+
+# ✅ CORRECT - centralized config
+features = SimulationFeatures.from_environment()
+if features.trade_draft_enabled:
+```
