@@ -2,7 +2,7 @@
 
 **Model Type**: Foundation - Single Agent Utility Demonstration  
 **Created**: October 8, 2025  
-**Status**: Phase 1.1 Mathematical Specification  
+**Status**: Mathematical Specification (Pre-Implementation)
 **Purpose**: Establish spatial-utility relationship through rigorous mathematical foundations
 
 ---
@@ -16,6 +16,10 @@ This document provides the complete mathematical specification for single-agent 
 ---
 
 ## 1. Agent Decision Problem (Spatial Context)
+
+### 0.0 Default Grid Setup for Demonstrations
+
+
 
 ### 1.1 State Space
 
@@ -32,17 +36,17 @@ At each discrete timestep $t$, an agent at position $(x_a, y_a)$ observes:
 - **Constraints**:
   - Carry capacity: $q_k^{\text{carry}} \leq C_{\text{max}}$ (default: 10 units)
   - Perception radius: $d_{\text{Manhattan}}(\text{agent}, \text{resource}) \leq R$ (default: 8 units)
-  - Movement speed: 1 grid cell per timestep
+  - Movement speed: 1 grid cell per timestep (Manhattan distance)
 
 ### 1.2 Action Space
 
 Available actions $a \in \mathcal{A}$:
 
-1. **Move**: $(x_a, y_a) \to (x_a + \Delta x, y_a + \Delta y)$ where $|\Delta x| + |\Delta y| = 1$
-2. **Collect**: Harvest 1 unit of resource at current position (if resource present)
-3. **Deposit**: Transfer goods from carry inventory to home storage (if at home)
-4. **Withdraw**: Transfer goods from home storage to carry inventory (if at home)
-5. **Idle**: Remain at current position, take no action
+1. **Move**: $(x_a, y_a) \to (x_a + 1, y_a)$ or $(x_a, y_a) \to (x_a, y_a + 1)$
+2. **Collect**: Harvest 1 unit of resource at current position (if resource present and resource is current target)
+3. **Deposit**: Transfer goods from carry inventory to home storage (if at home and carry inventory is full)
+4. **Withdraw**: Transfer goods from home storage to carry inventory (not relevant for pure foraging agents)
+5. **Return to/Idle at Home**: If no potential target resource remains in perception radius, return to home, deposit all goods, and wait for new resources to appear
 
 **Note**: Current implementation uses composite actions where "collect" implicitly includes pathfinding to resource location.
 
@@ -82,7 +86,7 @@ $$
 
 **Parameters**:
 - $\alpha, \beta > 0$ with $\alpha + \beta = 1$ (normalized preference weights)
-- $\varepsilon = 0.01$ (epsilon parameter, prevents divide-by-zero)
+- $\varepsilon = 0.001$ (epsilon parameter, prevents divide-by-zero)
 
 **Properties**:
 - **Diminishing marginal utility**: More of a good → lower marginal value
@@ -112,7 +116,7 @@ $$
 **Why Epsilon?**: 
 - Prevents $MU \to \infty$ as $q_k \to 0$ (mathematical stability)
 - Ensures finite marginal values for planning decisions
-- Small enough ($0.01$) to not distort preferences at educational scales (typical bundles: 5-20 units)
+- Small enough ($0.001$) to not distort preferences at educational scales (typical bundles: 5-20 units)
 
 ---
 

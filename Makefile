@@ -45,49 +45,6 @@ perf:
 		$(PYTHON) tests/performance/baseline_capture.py --steps 1000 --warmup 100; \
 	fi
 
-# Phase 0 Refactor Baseline Capture
-.PHONY: baseline-capture phase0-capture
-baseline-capture: phase0-capture
-
-phase0-capture:
-	@echo "📊 Phase 0: Comprehensive Baseline Capture for Refactor Validation"
-	@echo "This captures performance baselines, determinism hashes, and safety net validation"
-	@echo "Required before starting the unified refactor implementation"
-	@echo ""
-	@mkdir -p baselines
-	@echo "1/4 Running performance baseline across all 7 educational scenarios..."
-	@if [ -d "vmt-dev" ]; then \
-		. vmt-dev/bin/activate && $(PYTHON) tests/performance/baseline_capture.py --output baselines/performance_baseline.json; \
-	else \
-		$(PYTHON) tests/performance/baseline_capture.py --output baselines/performance_baseline.json; \
-	fi
-	@echo "2/4 Capturing determinism hashes for refactor validation..."
-	@if [ -d "vmt-dev" ]; then \
-		. vmt-dev/bin/activate && $(PYTHON) tests/performance/determinism_capture.py --output baselines/determinism_hashes.json; \
-	else \
-		$(PYTHON) tests/performance/determinism_capture.py --output baselines/determinism_hashes.json; \
-	fi
-	@echo "3/4 Running refactor safety net tests..."
-	@if [ -d "vmt-dev" ]; then \
-		. vmt-dev/bin/activate && pytest tests/integration/test_refactor_safeguards.py -v; \
-	else \
-		pytest tests/integration/test_refactor_safeguards.py -v; \
-	fi
-	@echo "4/4 Running core test suite for baseline validation..."
-	@if [ -d "vmt-dev" ]; then \
-		. vmt-dev/bin/activate && pytest tests/unit/test_simulation.py tests/unit/test_agent.py tests/unit/test_grid.py tests/unit/test_trade_phase1_foundations.py -q || echo "⚠️  Some non-critical tests failed, but Phase 0 core validation complete"; \
-	else \
-		pytest tests/unit/test_simulation.py tests/unit/test_agent.py tests/unit/test_grid.py tests/unit/test_trade_phase1_foundations.py -q || echo "⚠️  Some non-critical tests failed, but Phase 0 core validation complete"; \
-	fi
-	@echo ""
-	@echo "✅ Phase 0 Baseline Capture Complete!"
-	@echo "📁 Performance baseline: baselines/performance_baseline.json"
-	@echo "📁 Determinism hashes: baselines/determinism_hashes.json"
-	@echo "🔒 All safety nets validated"
-	@echo ""
-	@echo "Ready to proceed with unified refactor implementation."
-	@echo "See tmp_plans/CURRENT/CRITICAL/UNIFIED_REFACTOR_PLAN.md for Phase 1 details."
-
 token:
 	# Generate VMT repository token analysis report with full repotokens analysis
 	@echo "📄 Generating full token analysis report with timestamp..."
@@ -97,28 +54,6 @@ token:
 		cd llm_counter && $(PYTHON) generate_report.py --timestamp; \
 	fi
 	@echo "✅ Report saved to llm_counter/ with timestamped filename"
-
-token-analysis:
-	@echo "🔍 Running basic token analysis..."
-	cd llm_counter && $(PYTHON) demo_counter.py
-
-token-analysis-full:
-	@echo "🔍 Running detailed token analysis..."
-	@if [ -d "vmt-dev" ]; then \
-		. vmt-dev/bin/activate && cd llm_counter && $(PYTHON) token_counter.py --format table; \
-	else \
-		cd llm_counter && $(PYTHON) token_counter.py --format table; \
-	fi
-
-manual-tests:
-	# Launch comprehensive manual GUI tests for unified target selection
-	# 7 educational scenarios with visual observation and phase transitions  
-	@if [ -d "vmt-dev" ]; then \
-		echo "Using virtual environment..."; \
-		. vmt-dev/bin/activate && cd MANUAL_TESTS && $(PYTHON) test_start_menu.py; \
-	else \
-		cd MANUAL_TESTS && $(PYTHON) test_start_menu.py; \
-	fi
 
 launcher:
 	# Launch VMT Enhanced Test Launcher with modernized observer-based architecture
@@ -132,36 +67,6 @@ launcher:
 		ECONSIM_LAUNCHER_SUPPRESS_LOGS=1 $(PYTHON) -m econsim.gui.launcher.runner; \
 	fi
 
-batch-tests:
-	# Launch standalone batch test runner for sequential execution
-	# Professional interface with progress tracking and time estimates
-	@if [ -d "vmt-dev" ]; then \
-		echo "Using virtual environment..."; \
-		. vmt-dev/bin/activate && cd MANUAL_TESTS && $(PYTHON) batch_test_runner.py; \
-	else \
-		cd MANUAL_TESTS && $(PYTHON) batch_test_runner.py; \
-	fi
-
-bookmarks:
-	# Launch standalone bookmark manager for organizing favorite configurations
-	# Save, categorize, search, and quick-launch test configurations
-	@if [ -d "vmt-dev" ]; then \
-		echo "Using virtual environment..."; \
-		. vmt-dev/bin/activate && cd MANUAL_TESTS && $(PYTHON) test_bookmarks.py; \
-	else \
-		cd MANUAL_TESTS && $(PYTHON) test_bookmarks.py; \
-	fi
-
-# Legacy aliases for backward compatibility (modernized architecture)
-test: test-unit
-	@echo "Note: 'make test' is now 'make test-unit'. Use 'make manual-tests' for GUI tests."
-
-tests: manual-tests
-	@echo "Note: 'make tests' is now 'make manual-tests' (observer-based)."
-
-enhanced-tests:
-	@echo "Note: 'make enhanced-tests' is now 'make launcher' (observer-based architecture)."
-	@$(MAKE) launcher
 
 visualtest:
 	# Launch High Density Local test with visual debugging at 20 FPS
@@ -174,16 +79,6 @@ visualtest:
 		$(PYTHON) visual_test_simple.py; \
 	fi
 
-debug-target-arrows:
-	# Launch High Density Local test with enhanced target arrow debugging
-	# Uses TestRunner API for instant execution with debug logging
-	@echo "🎯 Debug Target Arrows - High Density Local Test"
-	@echo "Launching Test ID 3 with enhanced target debugging..."
-	@if [ -d "vmt-dev" ]; then \
-		. vmt-dev/bin/activate && $(PYTHON) debug_target_simple.py; \
-	else \
-		$(PYTHON) debug_target_simple.py; \
-	fi
 
 clean:
 	find . -type d -name '__pycache__' -prune -exec rm -rf {} +
