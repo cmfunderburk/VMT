@@ -6,9 +6,7 @@ concrete spatial interactions.
 
 ## Current Status
 
-**Branch:** `debug_recorder` (active development)\
-**Phase:** 3 complete (V2 implementation + tests), Phase 4 pending (legacy removal)\
-**Architecture:** Factory-based, unified V2 decision engine, O(n) spatial indexing
+**Architecture:** Factory-based, unified decision engine, O(n) spatial indexing
 
 ### Working Features
 
@@ -19,11 +17,6 @@ concrete spatial interactions.
 - ✅ Deterministic simulation (seed-based reproducibility)
 - ✅ O(n) spatial proximity queries (`AgentSpatialGrid`)
 - ✅ PyQt6 launcher with 7 educational scenarios
-- ✅ 210+ test suite with performance baselines
-
-### Removed
-
-- ❌ Delta recorder (October 2025) - use debugger or print statements
 
 ## Quick Start
 
@@ -65,19 +58,6 @@ make_agent_decision → Two-phase execution
 - `src/econsim/simulation/executor.py` - V2 two-phase execution
 - `src/econsim/simulation/world/spatial.py` - O(n) spatial indexing
 
-## Core Patterns
-
-**Factory-only imports:**
-
-```python
-# ✅ CORRECT
-from econsim.simulation.agent.utility_functions import create_utility_function
-utility_func = create_utility_function("cobb_douglas", alpha=0.5)
-
-# ❌ WRONG - never import concrete classes
-from econsim.simulation.agent.utility_functions import CobbDouglasUtilityFunction
-```
-
 **Determinism requirements:**
 
 - Fixed seed propagation
@@ -93,19 +73,7 @@ from econsim.simulation.agent.utility_functions import CobbDouglasUtilityFunctio
 
 ## Next Steps (Logical Implementation Order)
 
-### 1. **Complete Phase 4 Refactor** (High Priority)
-
-**Goal:** Remove legacy decision/preference system, rename V2 → canonical
-
-**Tasks:**
-
-- Remove legacy decision engine components
-- Rename `unified_decision.py` → `decision.py`
-- Update all imports to canonical names
-- Clean up `executor.py` (V2 becomes primary)
-- Verify all 210+ tests pass
-
-**Validation:** `make test-unit && make visualtest && make perf`
+### 1. Complete Comprehensive Economic Theory Documentation (High Priority)
 
 ### 2. **Implement DebugRecorder System** (Medium Priority)
 
@@ -137,13 +105,6 @@ from econsim.simulation.agent.utility_functions import CobbDouglasUtilityFunctio
 - Validate against economic theory predictions
 - Add scenario-specific statistical dashboards
 - Export capabilities for classroom use
-
-### 4. **Performance Optimization** (Low Priority, Ongoing)
-
-**Goal:** Maintain 30+ FPS with 1000+ agents, support research-scale (10k+ agents)
-
-**Current:** O(n) per agent via spatial indexing\
-**Optimization targets:** Rendering, trade matching, inventory updates
 
 ## Development Principles
 
