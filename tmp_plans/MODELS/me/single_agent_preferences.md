@@ -21,11 +21,5 @@ This document provides the complete mathematical specification for single-agent 
   - Epsilon is 0.001.
   - Distance discount constant is configurable, default is 0.
   - Perception radius is configurable, default is 8.
-  - Carry capacity is 10.
-  - Home storage is unlimited.
-  - Inventory is carried and home storage.
-  - Inventory is discrete and integer.
-  - Inventory is stored in a dictionary with keys "good1" and "good2".
-  - Resources spawn at random locations in the grid.
 
   ## 1. Agent Decision Problem (Spatial Context)
