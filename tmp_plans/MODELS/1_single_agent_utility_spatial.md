@@ -15,11 +15,18 @@ This document provides the complete mathematical specification for single-agent 
 
 ---
 
+## 0.0 Default Grid Setup for Demonstrations
+
+  - 5x5 grid.
+  - Agent spawns at (1,1).
+  - Preference parameters are normalized to 1 (alpha + beta = 1).
+  - Epsilon is 0.001.
+  - Distance discount constant is configurable, default is 0.
+  - Perception radius is configurable, default is 8.
+
+---
+
 ## 1. Agent Decision Problem (Spatial Context)
-
-### 0.0 Default Grid Setup for Demonstrations
-
-
 
 ### 1.1 State Space
 
@@ -300,9 +307,9 @@ resource_B = (15, 10)  # Distance: 5 Manhattan units
 **Analytical Calculation**:
 
 1. **Marginal Utilities**:
-   - $U(5, 5) = (5.01)^{0.7} \cdot (5.01)^{0.3} = 5.01$ (Cobb-Douglas property)
-   - $MU_1 = 0.7 \cdot \frac{5.01}{5.01} = 0.7$
-   - $MU_2 = 0.3 \cdot \frac{5.01}{5.01} = 0.3$
+   - $U(5, 5) = (5.001)^{0.7} \cdot (5.001)^{0.3} = 5.001$ (Cobb-Douglas property)
+   - $MU_1 = 0.7 \cdot \frac{5.001}{5.001} = 0.7$
+   - $MU_2 = 0.3 \cdot \frac{5.001}{5.001} = 0.3$
 
 2. **Distance-Discounted Values**:
    - $V_A = 0.7 \cdot e^{-0.15 \cdot 5} = 0.7 \cdot 0.472 = 0.330$
@@ -331,8 +338,8 @@ resource_B = (10, 10 + d_B)  # Distance: d_B (variable)
 **Analytical Calculation**:
 
 1. **Marginal Utilities** (balanced bundle):
-   - $MU_1 = 0.5 \cdot \frac{U}{10.01} = 0.0499$
-   - $MU_2 = 0.5 \cdot \frac{U}{10.01} = 0.0499$
+   - $MU_1 = 0.5 \cdot \frac{U}{10.001} = 0.0499$
+   - $MU_2 = 0.5 \cdot \frac{U}{10.001} = 0.0499$
    - Equal marginal utilities → distance determines choice
 
 2. **Switching Point**:

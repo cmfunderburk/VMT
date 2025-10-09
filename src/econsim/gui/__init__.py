@@ -7,12 +7,10 @@ functionality under a single hierarchy.
 The GUI package is organized into functional areas:
 - launcher: Test launcher GUI (migrated from tools/launcher)
 - widgets: Reusable GUI widgets (migrated from tools/widgets)
-- analysis: Economic analysis displays (migrated from gui/)
 - embedded: Embedded pygame components (migrated from gui/)
 """
 
 # Import from local modules (new structure)
-from .analysis import *
 from .embedded import *
 from .launcher import *
 from .widgets import *
@@ -44,6 +42,4 @@ __all__ = [
     # Widget components
     "ConfigEditor",
     "BatchRunner",
-    # Analysis components
-    "EconomicAnalysisWidget",
 ]
