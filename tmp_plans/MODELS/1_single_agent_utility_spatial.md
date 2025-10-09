@@ -539,7 +539,7 @@ def test_scenario_name():
    - Label: "Distance Discount (k)" with tooltip explaining exponential effect
 
 4. **Epsilon Slider** (Advanced):
-   - **ε**: Range `[0.001, 0.1]`, default `0.01`, step `0.001`
+   - **ε**: Range `[0.001, 0.1]`, default `0.001`, step `0.001`
    - Warning icon: "Changing epsilon affects marginal utility calculations"
    - Collapsible under "Advanced Parameters"
 
@@ -733,7 +733,7 @@ Before proceeding to Phase 1.2 GUI implementation:
 
 - [ ] Mathematical specifications reviewed by economics expert
 - [ ] All analytical predictions computed and documented
-- [ ] Epsilon value ($\varepsilon = 0.01$) justified in context of typical bundle sizes
+- [ ] Epsilon value ($\varepsilon = 0.001$) justified in context of typical bundle sizes
 - [ ] Distance discount constant ($k = 0.15$) validated against educational scenarios
 - [ ] Test scenarios (4.1-4.5) implemented and passing
 - [ ] Edge cases identified and handled (zero quantities, perception boundaries, etc.)
