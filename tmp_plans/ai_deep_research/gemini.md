@@ -1,5 +1,3 @@
-Certainly. Here is the full implementation plan in a markdown format that you can copy and save as a `.md` file.
-
 # A Comprehensive Implementation Plan for a Microeconomic Simulation Platform
 
 ## I. A Principled Framework for a Virtual Microeconomic Laboratory
@@ -88,7 +86,7 @@ A foundational `Agent` class will serve as the blueprint from which all specific
 
 ### 3.3 Computationally Representing Preferences
 
-A central technical challenge is the translation of the abstract mathematical concept of a preference relation (denoted `$ \succeq $`) into a concrete computational object. The platform will support multiple, interchangeable representations to accommodate a wide range of theoretical models:
+A central technical challenge is the translation of the abstract mathematical concept of a preference relation (denoted $\succeq$) into a concrete computational object. The platform will support multiple, interchangeable representations to accommodate a wide range of theoretical models:
 
 *   **Utility Function-Based Representation:** The primary method will be to define an agent's preferences via a specific, parameterizable utility function (e.g., Cobb-Douglas, CES, Leontief). This is the most direct way to represent preferences that satisfy the standard axioms of completeness, transitivity, continuity, and convexity.[33] The agent's choice is then determined by maximizing this function subject to constraints.
 *   **Rule-Based (Algorithmic) Representation:** To accommodate behavioral models or preferences that do not have a standard utility representation, preferences can be implemented algorithmically. A prime example is lexicographic preferences, where an agent prioritizes one good above all others. While famously lacking a real-valued utility representation, these preferences can be easily implemented as a sorting algorithm that compares bundles based on the primary good first, then the secondary good, and so on.[36]
@@ -100,7 +98,7 @@ The agent's `make_decision()` method is the computational implementation of its 
 
 For modules aligned with standard neoclassical theory, the choice function will be implemented as a numerical optimization algorithm. This algorithm will search the agent's feasible set (e.g., its budget set) to find the bundle that yields the maximum value from its utility function.[35]
 
-For more advanced modules incorporating uncertainty or behavioral realism, the platform will adopt a framework based on **Random Utility Theory**.[37, 38] In this approach, the utility an agent derives from a particular choice is modeled as the sum of two components: `$U = V + \epsilon$`. Here, `$V$` is the deterministic, "observable" component of utility (calculated from the agent's standard utility function), and `$\epsilon$` is a random error term representing unobserved factors, tastes, or idiosyncrasies in choice. The agent then chooses the option that provides the highest realized utility `$U$`.[37] This framework elegantly introduces probabilistic choice into the model and is a well-established method for integrating empirical data into agent-based simulations.[37]
+For more advanced modules incorporating uncertainty or behavioral realism, the platform will adopt a framework based on **Random Utility Theory**.[37, 38] In this approach, the utility an agent derives from a particular choice is modeled as the sum of two components: $$U = V + \epsilon$$ Here, $V$ is the deterministic, "observable" component of utility (calculated from the agent's standard utility function), and $\epsilon$ is a random error term representing unobserved factors, tastes, or idiosyncrasies in choice. The agent then chooses the option that provides the highest realized utility $U$.[37] This framework elegantly introduces probabilistic choice into the model and is a well-established method for integrating empirical data into agent-based simulations.[37]
 
 ## IV. Module Implementation Plan: From Preferences to General Equilibrium
 
@@ -109,28 +107,28 @@ This section provides a detailed, step-by-step implementation plan for a selecti
 ### 4.1 Module 1.1: Preference Relations and Indifference Curves
 
 *   **Concepts Demonstrated:** Completeness, Transitivity, Monotonicity ("more is better"), Convexity.[33, 39]
-*   **Agent Design:** In this introductory module, agents are passive reporters of their preferences. Each agent is endowed with a specific utility function, such as the Cobb-Douglas form `$U(x,y) = x^\alpha y^{1-\alpha}$`.
-*   **Grid Setup:** The NxN grid represents the consumption space for two goods, X and Y. Each cell `$(i, j)$` on the grid corresponds to a unique consumption bundle containing `$i$` units of good X and `$j$` units of good Y.
+*   **Agent Design:** In this introductory module, agents are passive reporters of their preferences. Each agent is endowed with a specific utility function, such as the Cobb-Douglas form $U(x,y) = x^\alpha y^{1-\alpha}$.
+*   **Grid Setup:** The NxN grid represents the consumption space for two goods, X and Y. Each cell $(i, j)$ on the grid corresponds to a unique consumption bundle containing $i$ units of good X and $j$ units of good Y.
 *   **Visualization and Interaction:**
     1.  The user selects a reference bundle, A, by clicking on a cell in the grid.
-    2.  The agent associated with that preference structure calculates the utility of this bundle, `$U(A)$`.
-    3.  The simulation engine then iterates through every other bundle, B, on the grid. It queries the agent's preference relation to compare `$U(B)$` with `$U(A)$`.
+    2.  The agent associated with that preference structure calculates the utility of this bundle, $U(A)$.
+    3.  The simulation engine then iterates through every other bundle, B, on the grid. It queries the agent's preference relation to compare $U(B)$ with $U(A)$.
     4.  Each cell is then "painted" a specific color based on this comparison, creating a complete indifference map in real-time.[39] For example:
-        *   **Green:** The set of bundles where `$U(B) > U(A)$` (the "preferred-to" set).
-        *   **Red:** The set of bundles where `$U(B) < U(A)$` (the "worse-than" set).
-        *   **Yellow:** The set of bundles where `$|U(B) - U(A)| < \delta$`, where `$\delta$` is a small tolerance. This band of yellow cells forms the visible indifference curve.[40]
-    5.  This interactive visualization provides powerful intuition. Users can adjust the parameters of the agent's utility function (e.g., changing `$\alpha$` in the Cobb-Douglas function, or switching to a Leontief function for perfect complements) and instantly observe the corresponding change in the shape of the indifference curves, solidifying their understanding of the link between mathematical utility functions and the geometry of preferences.[39]
+        *   **Green:** The set of bundles where $U(B) > U(A)$ (the "preferred-to" set).
+        *   **Red:** The set of bundles where $U(B) < U(A)$ (the "worse-than" set).
+        *   **Yellow:** The set of bundles where $|U(B) - U(A)| < \delta$, where $\delta$ is a small tolerance. This band of yellow cells forms the visible indifference curve.[40]
+    5.  This interactive visualization provides powerful intuition. Users can adjust the parameters of the agent's utility function (e.g., changing $\alpha$ in the Cobb-Douglas function, or switching to a Leontief function for perfect complements) and instantly observe the corresponding change in the shape of the indifference curves, solidifying their understanding of the link between mathematical utility functions and the geometry of preferences.[39]
 
 ### 4.2 Module 2.1: The Consumer's Problem
 
 *   **Concepts Demonstrated:** Utility Maximization, Budget Constraints, Marshallian Demand, and the tangency condition where the Marginal Rate of Substitution (MRS) equals the price ratio.[40, 41]
-*   **Agent Design:** Agents are now active decision-makers. In addition to a utility function, each agent is endowed with a fixed income, `$M$`. Their `make_decision()` method is programmed to solve the consumer's utility maximization problem.
-*   **Grid Setup:** The grid remains the two-good consumption space. The simulation environment has global parameters for the prices of the two goods, `$P_x$` and `$P_y$`.
+*   **Agent Design:** Agents are now active decision-makers. In addition to a utility function, each agent is endowed with a fixed income, $M$. Their `make_decision()` method is programmed to solve the consumer's utility maximization problem.
+*   **Grid Setup:** The grid remains the two-good consumption space. The simulation environment has global parameters for the prices of the two goods, $P_x$ and $P_y$.
 *   **Visualization and Interaction:**
     1.  The agent's indifference map is displayed as a background, as developed in Module 1.1.
-    2.  The agent's budget constraint, defined by the inequality `$P_x \cdot x + P_y \cdot y \leq M$`, is drawn over the grid. The affordable set of bundles is represented by a shaded triangular region.
+    2.  The agent's budget constraint, defined by the inequality $P_x \cdot x + P_y \cdot y \leq M$, is drawn over the grid. The affordable set of bundles is represented by a shaded triangular region.
     3.  The agent's decision process is visualized. The simulation highlights the agent's search for the highest attainable indifference curve that is tangent to the budget line. The optimal consumption bundle is marked with a distinct icon.
-    4.  The user can interactively change the parameters: dragging a slider to increase income `$M$` will shift the budget line outward, while changing `$P_x$` or `$P_y$` will pivot the budget line. In response, the agent's optimal choice will update in real-time, visually tracing out the income-consumption curve or the price-consumption curve.
+    4.  The user can interactively change the parameters: dragging a slider to increase income $M$ will shift the budget line outward, while changing $P_x$ or $P_y$ will pivot the budget line. In response, the agent's optimal choice will update in real-time, visually tracing out the income-consumption curve or the price-consumption curve.
 
 ### 4.3 Module 8.1: Simultaneous-Move Games and Nash Equilibrium
 
